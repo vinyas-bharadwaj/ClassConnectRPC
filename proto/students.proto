@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package main;
+
+option go_package = "proto/gen;grpcapipb";
+
+// ALl the RPC's related to students
+service StudentsSercies {
+    // GetStudents retrieves a list of students based on the provided criteria
+    rpc GetStudents (GetStudentsRequest) returns (Students);
+    // AddStudents adds new students to the system
+    rpc AddStudents (Students) returns (Students);
+    // UpdateStudents updates existing student information
+    rpc UpdateStudents (Students) returns (Students);   
+    // DeleteStudents removes students from the system by their IDs
+    rpc DeleteStudents (StudentIds) returns (DeleteStudentsConfirmation);
+}
+
+message StudentCount {
+    bool status = 1;
+    int32 student_count = 2;
+}
+
+message DeleteStudentsConfirmation {
+    string status = 1;
+    repeated string deleted_ids = 2;
+}
+
+message StudentId {
+    string id = 1;
+}
+
+message StudentIds {
+    repeated StudentId ids = 1;
+}
+
+message GetStudentsRequest {
+    Student student = 1;
+    repeated SortField sort_by = 2;
+    int32 page_number = 3;
+    int32 page_size = 4;
+}
+
+message SortField {
+    string field = 1;
+    Order order = 2;
+}
+
+enum Order {
+    ASC = 0;
+    DSC = 1;
+}
+
+message Student {
+    string id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string email = 4;
+    string class = 5;
+}
+
+message Students {
+    repeated Student students = 1;
+}
