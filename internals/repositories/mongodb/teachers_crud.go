@@ -4,7 +4,8 @@ import (
 	"ClassConnectRPC/internals/models"
 	"ClassConnectRPC/pkg/utils"
 	"context"
-	"reflect"
+	"errors"
+	"fmt"
 
 	pb "ClassConnectRPC/proto/gen"
 
@@ -23,7 +24,7 @@ func AddTeachersToDb(ctx context.Context, teachersFromReq []*pb.Teacher) ([]*pb.
 
 	newTeachers := make([]*models.Teacher, len(teachersFromReq))
 	for i, pbTeacher := range teachersFromReq {
-		modelTeacher := mapPbTeacherToModelTeacher(pbTeacher)
+		modelTeacher := MapPbTeacherToModelTeacher(pbTeacher)
 		newTeachers[i] = modelTeacher
 	}
 
@@ -39,47 +40,11 @@ func AddTeachersToDb(ctx context.Context, teachersFromReq []*pb.Teacher) ([]*pb.
 			teacher.Id = objectId.Hex()
 		}
 
-		pbTeacher := mapModelTeacherToPbTeacher(teacher)
+		pbTeacher := MapModelTeacherToPbTeacher(teacher)
 
 		addedTeachers = append(addedTeachers, pbTeacher)
 	}
 	return addedTeachers, nil
-}
-
-func mapModelTeacherToPbTeacher(teacher *models.Teacher) *pb.Teacher {
-	pbTeacher := &pb.Teacher{}
-	modelVal := reflect.ValueOf(teacher).Elem()
-	pbVal := reflect.ValueOf(pbTeacher).Elem()
-
-	for i := 0; i < modelVal.NumField(); i++ {
-		modelField := modelVal.Field(i)
-		modelFieldType := modelVal.Type().Field(i)
-
-		pbField := pbVal.FieldByName(modelFieldType.Name)
-		if pbField.IsValid() && pbField.CanSet() {
-			pbField.Set(modelField)
-		}
-
-	}
-	return pbTeacher
-}
-
-func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
-	modelTeacher := models.Teacher{}
-	pbVal := reflect.ValueOf(pbTeacher).Elem()
-	modelVal := reflect.ValueOf(&modelTeacher).Elem()
-
-	for j := 0; j < pbVal.NumField(); j++ {
-		pbField := pbVal.Field(j)
-		fieldName := pbVal.Type().Field(j).Name
-
-		modelField := modelVal.FieldByName(fieldName)
-		if modelField.IsValid() && modelField.CanSet() {
-			modelField.Set(pbField)
-		}
-	}
-
-	return &modelTeacher
 }
 
 func GetTeachersFromDB(ctx context.Context, sortOptions bson.D, filters bson.M) ([]*pb.Teacher, error) {
@@ -101,22 +66,78 @@ func GetTeachersFromDB(ctx context.Context, sortOptions bson.D, filters bson.M) 
 	}
 	defer cursor.Close(ctx)
 
-	var teachers []*pb.Teacher
-	for cursor.Next(ctx) {
-		var teacher models.Teacher
-		err = cursor.Decode(&teacher)
+	teachers, err := decodeEntities(ctx, cursor, func() *pb.Teacher { return &pb.Teacher{} }, func() *models.Teacher { return &models.Teacher{} })
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Internal error")
+	}
+	return teachers, nil
+}
+
+func ModifyTeachersInDB(ctx context.Context, req *pb.Teachers) ([]*pb.Teacher, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Error connecting to the database")
+	}
+	defer client.Disconnect(ctx)
+
+	var updatedTeachers []*pb.Teacher
+	for _, teacher := range req.Teachers {
+		if teacher.Id == "" {
+			return nil, utils.ErrorHandler(errors.New("id cannot be blank"), "id cannot be blank")
+		}
+
+		modelTeacher := MapPbTeacherToModelTeacher(teacher)
+		objId, err := primitive.ObjectIDFromHex(teacher.Id)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Invalid ID")
+		}
+
+		// Convert modelTeacher into a BSON document before updating the database
+		modelDoc, err := bson.Marshal(modelTeacher)
 		if err != nil {
 			return nil, utils.ErrorHandler(err, "Internal error")
 		}
 
-		teachers = append(teachers, &pb.Teacher{
-			Id:        teacher.Id,
-			FirstName: teacher.FirstName,
-			LastName:  teacher.LastName,
-			Email:     teacher.Email,
-			Class:     teacher.Class,
-			Subject:   teacher.Subject,
-		})
+		var updateDoc bson.M
+		err = bson.Unmarshal(modelDoc, &updateDoc)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Internal error")
+		}
+
+		// Remove the '_id' field from 'updateDoc' since we are not meant to update the id
+		delete(updateDoc, "_id")
+
+		_, err = client.Database("school").Collection("teachers").UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": updateDoc})
+		if err != nil {
+			return nil, utils.ErrorHandler(err, fmt.Sprintf("Error updating teacher with ID: %s", teacher.Id))
+		}
+
+		updatedTeacher := MapModelTeacherToPbTeacher(modelTeacher)
+		updatedTeachers = append(updatedTeachers, updatedTeacher)
 	}
-	return teachers, nil
+	return updatedTeachers, nil
+}
+
+func DeleteTeachersFromDB(ctx context.Context, objectIdsToDelete []primitive.ObjectID) ([]string, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Internal error")
+	}
+	defer client.Disconnect(ctx)
+
+	filter := bson.M{"_id": bson.M{"$in": objectIdsToDelete}}
+	result, err := client.Database("school").Collection("teachers").DeleteMany(ctx, filter)
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Internal error")
+	}
+
+	if result.DeletedCount == 0 {
+		return nil, utils.ErrorHandler(err, "No teachers were deleted")
+	}
+
+	var deletedIds []string
+	for _, v := range objectIdsToDelete {
+		deletedIds = append(deletedIds, v.Hex())
+	}
+	return deletedIds, nil
 }
