@@ -27,7 +27,7 @@ const (
 	ExecsService_Logout_FullMethodName         = "/main.ExecsService/Logout"
 	ExecsService_UpdatePassword_FullMethodName = "/main.ExecsService/UpdatePassword"
 	ExecsService_ResetPassword_FullMethodName  = "/main.ExecsService/ResetPassword"
-	ExecsService_ForgotResponse_FullMethodName = "/main.ExecsService/ForgotResponse"
+	ExecsService_ForgotPassword_FullMethodName = "/main.ExecsService/ForgotPassword"
 	ExecsService_DeactivateUser_FullMethodName = "/main.ExecsService/DeactivateUser"
 )
 
@@ -45,11 +45,17 @@ type ExecsServiceClient interface {
 	UpdateExecs(ctx context.Context, in *Execs, opts ...grpc.CallOption) (*Execs, error)
 	// DeleteTeachers removes execs from the system by their IDs
 	DeleteExecs(ctx context.Context, in *ExecIds, opts ...grpc.CallOption) (*DeleteExecsConfirmation, error)
+	// Login allows execs to login
 	Login(ctx context.Context, in *ExecLoginRequest, opts ...grpc.CallOption) (*ExecLoginResponse, error)
+	// Logout allows execs to logout
 	Logout(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*ExecLogoutResponse, error)
+	// UpdatePassword allows execs to update their passwords
 	UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*UpdatePasswordResponse, error)
+	// ResetPassword allows execs to reset their old password
 	ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*Confirmation, error)
-	ForgotResponse(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error)
+	// ForgotPassword allows execs to reset their old password if they forgot their old password
+	ForgotPassword(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error)
+	// Allows execs to deactivate users
 	DeactivateUser(ctx context.Context, in *ExecIds, opts ...grpc.CallOption) (*Confirmation, error)
 }
 
@@ -141,10 +147,10 @@ func (c *execsServiceClient) ResetPassword(ctx context.Context, in *ResetPasswor
 	return out, nil
 }
 
-func (c *execsServiceClient) ForgotResponse(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error) {
+func (c *execsServiceClient) ForgotPassword(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ForgotPasswordResponse)
-	err := c.cc.Invoke(ctx, ExecsService_ForgotResponse_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ExecsService_ForgotPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,11 +181,17 @@ type ExecsServiceServer interface {
 	UpdateExecs(context.Context, *Execs) (*Execs, error)
 	// DeleteTeachers removes execs from the system by their IDs
 	DeleteExecs(context.Context, *ExecIds) (*DeleteExecsConfirmation, error)
+	// Login allows execs to login
 	Login(context.Context, *ExecLoginRequest) (*ExecLoginResponse, error)
+	// Logout allows execs to logout
 	Logout(context.Context, *EmptyRequest) (*ExecLogoutResponse, error)
+	// UpdatePassword allows execs to update their passwords
 	UpdatePassword(context.Context, *UpdatePasswordRequest) (*UpdatePasswordResponse, error)
+	// ResetPassword allows execs to reset their old password
 	ResetPassword(context.Context, *ResetPasswordRequest) (*Confirmation, error)
-	ForgotResponse(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error)
+	// ForgotPassword allows execs to reset their old password if they forgot their old password
+	ForgotPassword(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error)
+	// Allows execs to deactivate users
 	DeactivateUser(context.Context, *ExecIds) (*Confirmation, error)
 	mustEmbedUnimplementedExecsServiceServer()
 }
@@ -215,8 +227,8 @@ func (UnimplementedExecsServiceServer) UpdatePassword(context.Context, *UpdatePa
 func (UnimplementedExecsServiceServer) ResetPassword(context.Context, *ResetPasswordRequest) (*Confirmation, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResetPassword not implemented")
 }
-func (UnimplementedExecsServiceServer) ForgotResponse(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ForgotResponse not implemented")
+func (UnimplementedExecsServiceServer) ForgotPassword(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ForgotPassword not implemented")
 }
 func (UnimplementedExecsServiceServer) DeactivateUser(context.Context, *ExecIds) (*Confirmation, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeactivateUser not implemented")
@@ -386,20 +398,20 @@ func _ExecsService_ResetPassword_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExecsService_ForgotResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ExecsService_ForgotPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ForgotPasswordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ExecsServiceServer).ForgotResponse(ctx, in)
+		return srv.(ExecsServiceServer).ForgotPassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ExecsService_ForgotResponse_FullMethodName,
+		FullMethod: ExecsService_ForgotPassword_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecsServiceServer).ForgotResponse(ctx, req.(*ForgotPasswordRequest))
+		return srv.(ExecsServiceServer).ForgotPassword(ctx, req.(*ForgotPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -462,8 +474,8 @@ var ExecsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ExecsService_ResetPassword_Handler,
 		},
 		{
-			MethodName: "ForgotResponse",
-			Handler:    _ExecsService_ForgotResponse_Handler,
+			MethodName: "ForgotPassword",
+			Handler:    _ExecsService_ForgotPassword_Handler,
 		},
 		{
 			MethodName: "DeactivateUser",

@@ -64,6 +64,14 @@ func MapModelTeacherToPbTeacher(teacherModel *models.Teacher) *pb.Teacher {
 	return MapModelToPb(teacherModel, func() *pb.Teacher { return &pb.Teacher{} })
 }
 
+func MapModelStudentToPbStudent(studentModel *models.Student) *pb.Student {
+	return MapModelToPb(studentModel, func() *pb.Student { return &pb.Student{} })
+}
+
+func MapModelExecToPbExec(execModel *models.Exec) *pb.Exec {
+	return MapModelToPb(execModel, func() *pb.Exec { return &pb.Exec{} })
+}
+
 func MapPbToModel[P any, M any](pbStruct *P, newModel func() *M) *M {
 	modelEntity := newModel()
 	pbVal := reflect.ValueOf(pbStruct).Elem()
@@ -84,4 +92,12 @@ func MapPbToModel[P any, M any](pbStruct *P, newModel func() *M) *M {
 
 func MapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
 	return MapPbToModel(pbTeacher, func() *models.Teacher { return &models.Teacher{} })
+}
+
+func MapPbStudentToModelStudent(pbStudent *pb.Student) *models.Student {
+	return MapPbToModel(pbStudent, func() *models.Student { return &models.Student{} })
+}
+
+func MapPbExecToModelExec(pbExec *pb.Exec) *models.Exec {
+	return MapPbToModel(pbExec, func() *models.Exec { return &models.Exec{} })
 }

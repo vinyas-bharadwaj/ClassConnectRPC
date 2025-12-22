@@ -2,12 +2,15 @@ package main
 
 import (
 	"ClassConnectRPC/internals/api/handlers"
+	"ClassConnectRPC/internals/api/interceptors"
 	"ClassConnectRPC/internals/repositories/mongodb"
+	"ClassConnectRPC/pkg/utils"
 	pb "ClassConnectRPC/proto/gen"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -25,7 +28,11 @@ func init() {
 func main() {
 	mongodb.CreateMongoClient()
 
-	s := grpc.NewServer()
+	// Start the background goroutine to clean up expired tokens from the blacklist
+	go utils.JwtStore.CleanUpExpiredTokens()
+
+	r := interceptors.NewRateLimiter(5, time.Minute)
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(r.RateLimitingInterceptor, interceptors.ResponseTimeInterceptor, interceptors.AuthenticationInterceptor))
 
 	pb.RegisterTeachersServiceServer(s, &handlers.Server{})
 	pb.RegisterStudentsSerciesServer(s, &handlers.Server{})

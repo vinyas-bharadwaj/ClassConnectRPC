@@ -722,7 +722,7 @@ type Exec struct {
 	PasswordResetToken   string                 `protobuf:"bytes,9,opt,name=password_reset_token,json=passwordResetToken,proto3" json:"password_reset_token,omitempty"`
 	PasswordTokenExpires string                 `protobuf:"bytes,10,opt,name=password_token_expires,json=passwordTokenExpires,proto3" json:"password_token_expires,omitempty"`
 	Role                 string                 `protobuf:"bytes,11,opt,name=role,proto3" json:"role,omitempty"`
-	InactiveStatus       string                 `protobuf:"bytes,12,opt,name=inactive_status,json=inactiveStatus,proto3" json:"inactive_status,omitempty"`
+	InactiveStatus       bool                   `protobuf:"varint,12,opt,name=inactive_status,json=inactiveStatus,proto3" json:"inactive_status,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -834,16 +834,16 @@ func (x *Exec) GetRole() string {
 	return ""
 }
 
-func (x *Exec) GetInactiveStatus() string {
+func (x *Exec) GetInactiveStatus() bool {
 	if x != nil {
 		return x.InactiveStatus
 	}
-	return ""
+	return false
 }
 
 type Execs struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Execs         []*Execs               `protobuf:"bytes,1,rep,name=execs,proto3" json:"execs,omitempty"`
+	Execs         []*Exec                `protobuf:"bytes,1,rep,name=execs,proto3" json:"execs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -878,7 +878,7 @@ func (*Execs) Descriptor() ([]byte, []int) {
 	return file_execs_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *Execs) GetExecs() []*Execs {
+func (x *Execs) GetExecs() []*Exec {
 	if x != nil {
 		return x.Execs
 	}
@@ -945,9 +945,10 @@ const file_execs_proto_rawDesc = "" +
 	"\x16password_token_expires\x18\n" +
 	" \x01(\tR\x14passwordTokenExpires\x12\x12\n" +
 	"\x04role\x18\v \x01(\tR\x04role\x12'\n" +
-	"\x0finactive_status\x18\f \x01(\tR\x0einactiveStatus\"*\n" +
-	"\x05Execs\x12!\n" +
-	"\x05execs\x18\x01 \x03(\v2\v.main.ExecsR\x05execs2\xcc\x04\n" +
+	"\x0finactive_status\x18\f \x01(\bR\x0einactiveStatus\")\n" +
+	"\x05Execs\x12 \n" +
+	"\x05execs\x18\x01 \x03(\v2\n" +
+	".main.ExecR\x05execs2\xcc\x04\n" +
 	"\fExecsService\x12.\n" +
 	"\bGetExecs\x12\x15.main.GetExecsRequest\x1a\v.main.Execs\x12$\n" +
 	"\bAddExecs\x12\v.main.Execs\x1a\v.main.Execs\x12'\n" +
@@ -957,7 +958,7 @@ const file_execs_proto_rawDesc = "" +
 	"\x06Logout\x12\x12.main.EmptyRequest\x1a\x18.main.ExecLogoutResponse\x12K\n" +
 	"\x0eUpdatePassword\x12\x1b.main.UpdatePasswordRequest\x1a\x1c.main.UpdatePasswordResponse\x12?\n" +
 	"\rResetPassword\x12\x1a.main.ResetPasswordRequest\x1a\x12.main.Confirmation\x12K\n" +
-	"\x0eForgotResponse\x12\x1b.main.ForgotPasswordRequest\x1a\x1c.main.ForgotPasswordResponse\x123\n" +
+	"\x0eForgotPassword\x12\x1b.main.ForgotPasswordRequest\x1a\x1c.main.ForgotPasswordResponse\x123\n" +
 	"\x0eDeactivateUser\x12\r.main.ExecIds\x1a\x12.main.ConfirmationB\x15Z\x13proto/gen;grpcapipbb\x06proto3"
 
 var (
@@ -996,7 +997,7 @@ var file_execs_proto_depIdxs = []int32{
 	11, // 0: main.ExecIds.ids:type_name -> main.ExecId
 	14, // 1: main.GetExecsRequest.exec:type_name -> main.Exec
 	16, // 2: main.GetExecsRequest.sort_by:type_name -> main.SortField
-	15, // 3: main.Execs.execs:type_name -> main.Execs
+	14, // 3: main.Execs.execs:type_name -> main.Exec
 	13, // 4: main.ExecsService.GetExecs:input_type -> main.GetExecsRequest
 	15, // 5: main.ExecsService.AddExecs:input_type -> main.Execs
 	15, // 6: main.ExecsService.UpdateExecs:input_type -> main.Execs
@@ -1005,7 +1006,7 @@ var file_execs_proto_depIdxs = []int32{
 	9,  // 9: main.ExecsService.Logout:input_type -> main.EmptyRequest
 	7,  // 10: main.ExecsService.UpdatePassword:input_type -> main.UpdatePasswordRequest
 	5,  // 11: main.ExecsService.ResetPassword:input_type -> main.ResetPasswordRequest
-	3,  // 12: main.ExecsService.ForgotResponse:input_type -> main.ForgotPasswordRequest
+	3,  // 12: main.ExecsService.ForgotPassword:input_type -> main.ForgotPasswordRequest
 	12, // 13: main.ExecsService.DeactivateUser:input_type -> main.ExecIds
 	15, // 14: main.ExecsService.GetExecs:output_type -> main.Execs
 	15, // 15: main.ExecsService.AddExecs:output_type -> main.Execs
@@ -1015,7 +1016,7 @@ var file_execs_proto_depIdxs = []int32{
 	8,  // 19: main.ExecsService.Logout:output_type -> main.ExecLogoutResponse
 	6,  // 20: main.ExecsService.UpdatePassword:output_type -> main.UpdatePasswordResponse
 	4,  // 21: main.ExecsService.ResetPassword:output_type -> main.Confirmation
-	2,  // 22: main.ExecsService.ForgotResponse:output_type -> main.ForgotPasswordResponse
+	2,  // 22: main.ExecsService.ForgotPassword:output_type -> main.ForgotPasswordResponse
 	4,  // 23: main.ExecsService.DeactivateUser:output_type -> main.Confirmation
 	14, // [14:24] is the sub-list for method output_type
 	4,  // [4:14] is the sub-list for method input_type

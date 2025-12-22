@@ -107,11 +107,11 @@ message Exec {
     string password_reset_token = 9;
     string password_token_expires = 10;
     string role = 11;
-    string inactive_status = 12;
+    bool inactive_status = 12;
 }
 
 message Execs {
-    repeated Execs execs = 1;
+    repeated Exec execs = 1;
 }
 
 

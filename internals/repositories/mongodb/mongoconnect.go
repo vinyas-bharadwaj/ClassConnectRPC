@@ -4,6 +4,7 @@ import (
 	"ClassConnectRPC/pkg/utils"
 	"context"
 	"log"
+	"os"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -11,7 +12,7 @@ import (
 
 func CreateMongoClient() (*mongo.Client, error) {
 	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
 	if err != nil {
 		return nil, utils.ErrorHandler(err, "Unable to connect to database")
 	}
