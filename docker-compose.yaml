@@ -1,0 +1,49 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grpc_api
+    env_file:
+      - .env                  
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "50051:50051"
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      API_PORT: ${SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      MONGODB_URI: ${MONGODB_DOCKER_URI}
+
+  mongo:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+    env_file:
+      - .env                    
+    environment:
+      ME_CONFIG_MONGODB_URL: ${MONGODB_URI}
+      ME_CONFIG_BASICAUTH_ENABLED: false
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge

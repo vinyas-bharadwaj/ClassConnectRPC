@@ -3,12 +3,14 @@ package utils
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 type ContextKey string
 
 func AuthorizeUser(ctx context.Context, allowedRoles ...string) error {
 	userRole, ok := ctx.Value(ContextKey("role")).(string)
+	fmt.Println(userRole)
 	if !ok {
 		return errors.New("user not authorized for access: role not found")
 	}

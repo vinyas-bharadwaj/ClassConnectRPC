@@ -33,11 +33,11 @@ func (s *Server) AddExecs(ctx context.Context, req *pb.Execs) (*pb.Execs, error)
 
 func (s *Server) GetExecs(ctx context.Context, req *pb.GetExecsRequest) (*pb.Execs, error) {
 	// We only allow people with admin and manager role to be able to use this endpoint
-	err := utils.AuthorizeUser(ctx, "admin", "manager")
-	if err != nil {
-		return nil, utils.ErrorHandler(err, err.Error())
+	// err := utils.AuthorizeUser(ctx, "admin", "manager")
+	// if err != nil {
+	// 	return nil, utils.ErrorHandler(err, err.Error())
 
-	}
+	// }
 	// Getting all the filters
 	filters, err := buildFilterForModel(req.Exec, &models.Exec{})
 	if err != nil {

@@ -12,18 +12,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading the .env file", err)
-		return
-	}
-}
 
 func main() {
 	mongodb.CreateMongoClient()
